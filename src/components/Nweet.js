@@ -24,7 +24,6 @@ const Nweet = ({ nweetObj, isOwner }) => {
     await dbService.update(nweetObj.id, newNweet);
     setEditing(false);
   };
-
   return (
     <div>
       {editing ? (
