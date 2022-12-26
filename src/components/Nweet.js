@@ -8,7 +8,7 @@ const Nweet = ({ nweetObj, isOwner }) => {
   const onClickDelete = async () => {
     const ok = window.confirm("Are you sure you want to delete this nweet?");
     if (ok) {
-      await dbService.del(nweetObj.id);
+      await dbService.del(nweetObj);
     }
   };
 
@@ -19,11 +19,13 @@ const Nweet = ({ nweetObj, isOwner }) => {
     } = event;
     setNewNweet(value);
   };
+
   const onSubmit = async (event) => {
     event.preventDefault();
     await dbService.update(nweetObj.id, newNweet);
     setEditing(false);
   };
+
   return (
     <div>
       {editing ? (
@@ -47,6 +49,14 @@ const Nweet = ({ nweetObj, isOwner }) => {
       ) : (
         <>
           <h4>{nweetObj.text}</h4>
+          {nweetObj.attachmentUrl && (
+            <img
+              src={nweetObj.attachmentUrl}
+              width="50px"
+              height="50px"
+              alt=""
+            />
+          )}
           {isOwner && (
             <>
               <button onClick={onClickDelete}>Delete Nweet</button>

@@ -23,9 +23,15 @@ import {
   query,
 } from "firebase/firestore";
 
-import "firebase/compat/storage";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import {
+  getStorage,
+  ref,
+  uploadString,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
+
+import { v4 } from "uuid";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -61,16 +67,33 @@ const db = getFirestore();
 const col = collection(db, "nweets");
 const getQuery = query(col, orderBy("createdAt", "desc"));
 
-const add = (nweet, uid) => {
+const add = async (nweet, uid, attachment) => {
+  let url = "";
+  if (attachment !== "") {
+    url = await upload(attachment, uid);
+  }
+
   return addDoc(col, {
     text: nweet,
     createdAt: Date.now(),
     creatorId: uid,
+    attachmentUrl: url,
   });
 };
 
-const del = (id) => {
-  return deleteDoc(doc(db, "nweets", `${id}`));
+const del = async (nweetObj) => {
+  try {
+    await deleteDoc(doc(db, "nweets", `${nweetObj.id}`));
+
+    if (nweetObj.attachmentUrl !== "") {
+      const storageRef = ref(storage, nweetObj.attachmentUrl);
+      console.log(nweetObj.attachmentUrl);
+      await deleteObject(storageRef);
+      console.log("deleted successfully.");
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 const update = (id, nweet) => {
@@ -85,6 +108,16 @@ const gets = () => {
 
 const onSnapShot = (callback) => {
   return onSnapshot(getQuery, callback);
+};
+
+const storage = getStorage();
+
+const upload = async (attachment, uid) => {
+  const fileRef = ref(storage, `${uid}/${v4()}`);
+  const response = await uploadString(fileRef, attachment, "data_url");
+  const url = await getDownloadURL(response.ref);
+
+  return url;
 };
 
 export const dbService = {
@@ -103,6 +136,11 @@ export const authService = {
   signIn: signIn,
   signInSocial: signInSocial,
   signOut: () => signOut(auth),
+};
+
+export const storageService = {
+  storage: storage,
+  upload: upload,
 };
 
 export default app;
