@@ -8,6 +8,7 @@ import {
   signInWithPopup,
   GithubAuthProvider,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 
 import {
@@ -21,6 +22,7 @@ import {
   onSnapshot,
   orderBy,
   query,
+  where,
 } from "firebase/firestore";
 
 import {
@@ -52,6 +54,10 @@ const create = async (email, password) => {
   return createUserWithEmailAndPassword(auth, email, password);
 };
 
+const updateUserProfile = (user, data) => {
+  return updateProfile(user, data);
+};
+
 const signIn = async (email, password) => {
   return signInWithEmailAndPassword(auth, email, password);
 };
@@ -65,7 +71,6 @@ const signInSocial = async (name) => {
 
 const db = getFirestore();
 const col = collection(db, "nweets");
-const getQuery = query(col, orderBy("createdAt", "desc"));
 
 const add = async (nweet, uid, attachment) => {
   let url = "";
@@ -102,12 +107,25 @@ const update = (id, nweet) => {
   });
 };
 
-const gets = () => {
-  return getDocs(getQuery);
+const gets = async (uid = null) => {
+  let querySnapshot = null;
+  if (uid) {
+    querySnapshot = await getDocs(
+      query(col, orderBy("createdAt", "desc"), where("creatorId", "==", uid))
+    );
+  } else {
+    querySnapshot = await getDocs(query(col, orderBy("createdAt", "desc")));
+  }
+  return (
+    querySnapshot.docs.map((document) => ({
+      id: document.id,
+      ...document.data(),
+    })) ?? []
+  );
 };
 
 const onSnapShot = (callback) => {
-  return onSnapshot(getQuery, callback);
+  return onSnapshot(query(col, orderBy("createdAt", "desc")), callback);
 };
 
 const storage = getStorage();
@@ -122,7 +140,6 @@ const upload = async (attachment, uid) => {
 
 export const dbService = {
   db: db,
-  getQuery: getQuery,
   add: add,
   del: del,
   gets: gets,
@@ -133,6 +150,7 @@ export const dbService = {
 export const authService = {
   auth: auth,
   create: create,
+  updateUserProfile: updateUserProfile,
   signIn: signIn,
   signInSocial: signInSocial,
   signOut: () => signOut(auth),

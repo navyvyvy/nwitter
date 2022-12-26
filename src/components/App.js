@@ -9,11 +9,25 @@ function App() {
   useEffect(() => {
     authService.auth.onAuthStateChanged((user) => {
       if (user) {
-        setUserObj(user);
+        setUserObj({
+          displayName: user.displayName ?? "",
+          uid: user.uid,
+          updateProfile: (args) => user.updateProfile(args),
+        });
       }
       setInit(true);
     });
   }, []);
+
+  const refreshUser = async () => {
+    await authService.auth.updateCurrentUser();
+    const user = authService.auth.currentUser;
+    setUserObj({
+      displayName: user.displayName ?? "",
+      uid: user.uid,
+      updateProfile: (args) => user.updateProfile(args),
+    });
+  };
 
   return (
     <>
