@@ -2,11 +2,12 @@ import { authService, dbService } from "fbase";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Profile = ({ userObj }) => {
+const Profile = ({ refreshUser, userObj }) => {
   const [newDisplayName, setNewDisplayName] = useState(userObj.displayName);
   const navigate = useNavigate();
   const onClickSignOut = () => {
     authService.signOut();
+    refreshUser();
     //    navigate("/", { replace: true });
   };
 
@@ -23,9 +24,10 @@ const Profile = ({ userObj }) => {
     event.preventDefault();
 
     if (userObj.displayName !== newDisplayName) {
-      await authService.updateUserProfile(userObj, {
+      await authService.updateUserProfile(authService.auth.currentUser, {
         displayName: newDisplayName,
       });
+      refreshUser();
     }
   };
 
@@ -38,17 +40,27 @@ const Profile = ({ userObj }) => {
 
   return (
     <>
-      <form onSubmit={onSubmit}>
-        <input
-          onChange={onChange}
-          type="text"
-          placeholder="Display name"
-          value={newDisplayName}
-        />
-        <input type="submit" value="Update Profile" />
-      </form>
-      <br />
-      <button onClick={onClickSignOut}>Sign Out</button>
+      <div className="container">
+        <form onSubmit={onSubmit} className="profileForm">
+          <input
+            onChange={onChange}
+            type="text"
+            autoFocus
+            placeholder="Display name"
+            value={newDisplayName}
+            className="formInput"
+          />
+          <input
+            type="submit"
+            value="Update Profile"
+            className="formBtn"
+            style={{ marginTop: 10 }}
+          />
+        </form>
+        <span className="formBtn cancelBtn logOut" onClick={onClickSignOut}>
+          Log Out
+        </span>
+      </div>
     </>
   );
 };

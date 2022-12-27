@@ -14,13 +14,14 @@ function App() {
           uid: user.uid,
           updateProfile: (args) => user.updateProfile(args),
         });
+      } else {
+        setUserObj(null);
       }
       setInit(true);
     });
   }, []);
 
   const refreshUser = async () => {
-    await authService.auth.updateCurrentUser();
     const user = authService.auth.currentUser;
     setUserObj({
       displayName: user.displayName ?? "",
@@ -32,7 +33,11 @@ function App() {
   return (
     <>
       {init ? (
-        <AppRouter isLoggedIn={Boolean(userObj)} userObj={userObj} />
+        <AppRouter
+          refreshUser={refreshUser}
+          isLoggedIn={Boolean(userObj)}
+          userObj={userObj}
+        />
       ) : (
         "Initializing..."
       )}
